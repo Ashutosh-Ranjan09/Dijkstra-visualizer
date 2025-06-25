@@ -585,19 +585,21 @@ export default function GraphDijkstra() {
   }, [nodes]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-      {/* Controls Panel */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-b border-blue-200 dark:border-blue-700">
-        <div className="px-3 py-2 space-y-2">
-          {/* First Row - Main Controls */}
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <div className="flex items-center gap-2">
-              <label className="font-medium text-blue-900 dark:text-blue-200 whitespace-nowrap">
-                Start:
+    <div className="w-full h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+      {/* Enhanced Controls Panel */}
+      <div className="flex-shrink-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900/20 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="px-4 py-3">
+          {/* Algorithm Controls Section */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Start:
+                </label>
                 <select
                   value={start}
                   onChange={(e) => setStart(e.target.value)}
-                  className="ml-1 px-2 py-1 text-xs rounded border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 text-blue-900 dark:text-blue-200"
+                  className="px-2 py-1 text-sm rounded border-0 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   {nodes.map((n) => (
                     <option key={n.id} value={n.id}>
@@ -605,13 +607,16 @@ export default function GraphDijkstra() {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="font-medium text-blue-900 dark:text-blue-200 whitespace-nowrap">
-                End:
+              </div>
+
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  End:
+                </label>
                 <select
                   value={end}
                   onChange={(e) => setEnd(e.target.value)}
-                  className="ml-1 px-2 py-1 text-xs rounded border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 text-blue-900 dark:text-blue-200"
+                  className="px-2 py-1 text-sm rounded border-0 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   {nodes.map((n) => (
                     <option key={n.id} value={n.id}>
@@ -619,24 +624,26 @@ export default function GraphDijkstra() {
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
+
+              <button
+                onClick={runDijkstra}
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md hover:from-blue-700 hover:to-blue-800 transition-all duration-200 transform hover:scale-105"
+              >
+                🚀 Run Dijkstra
+              </button>
             </div>
 
-            <button
-              onClick={runDijkstra}
-              className="px-3 py-1 text-xs rounded bg-blue-600 text-white font-medium shadow hover:bg-blue-700 transition-colors"
-            >
-              Run Dijkstra
-            </button>
-
-            {/* Algorithm Controls */}
+            {/* Algorithm Step Controls */}
             {algoSteps.length > 0 && algoStepIndex >= 0 && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
                 <button
                   onClick={handleStepBack}
                   disabled={algoStepIndex <= 0}
-                  className={`px-2 py-1 text-xs rounded font-medium shadow transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 ${
-                    algoStepIndex <= 0 ? "opacity-50 cursor-not-allowed" : ""
+                  className={`px-3 py-1 text-sm rounded-md font-medium transition-all duration-200 ${
+                    algoStepIndex <= 0
+                      ? "bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
+                      : "bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500"
                   }`}
                   title="Step Back"
                 >
@@ -644,10 +651,10 @@ export default function GraphDijkstra() {
                 </button>
                 <button
                   onClick={() => setPaused((p) => !p)}
-                  className={`px-2 py-1 text-xs rounded font-medium shadow transition-colors ${
+                  className={`px-3 py-1 text-sm rounded-md font-medium transition-all duration-200 ${
                     paused
                       ? "bg-green-500 hover:bg-green-600 text-white"
-                      : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                      : "bg-amber-500 hover:bg-amber-600 text-white"
                   }`}
                   title={paused ? "Resume" : "Pause"}
                 >
@@ -656,114 +663,120 @@ export default function GraphDijkstra() {
                 <button
                   onClick={handleStepForward}
                   disabled={algoStepIndex >= algoSteps.length - 1}
-                  className={`px-2 py-1 text-xs rounded font-medium shadow transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 ${
+                  className={`px-3 py-1 text-sm rounded-md font-medium transition-all duration-200 ${
                     algoStepIndex >= algoSteps.length - 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                      ? "bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
+                      : "bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500"
                   }`}
                   title="Step Forward"
                 >
                   ⏭️
                 </button>
+                <div className="flex items-center gap-2 ml-2 pl-2 border-l border-slate-300 dark:border-slate-600">
+                  <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                    Speed:
+                  </label>
+                  <input
+                    type="range"
+                    min="50"
+                    max="2000"
+                    step="50"
+                    value={speed}
+                    onChange={(e) => setSpeed(Number(e.target.value))}
+                    className="accent-blue-600 w-20"
+                  />
+                  <span className="text-xs text-slate-500 dark:text-slate-400 w-12 text-center">
+                    {speed}ms
+                  </span>
+                </div>
               </div>
             )}
-
-            {/* Speed Control */}
-            <div className="flex items-center gap-1">
-              <label className="text-xs font-medium text-blue-900 dark:text-blue-200 whitespace-nowrap">
-                Speed:
-              </label>
-              <input
-                type="range"
-                min="50"
-                max="2000"
-                step="50"
-                value={speed}
-                onChange={(e) => setSpeed(Number(e.target.value))}
-                className="accent-blue-600 w-16"
-              />
-              <span className="text-xs text-blue-700 dark:text-blue-300 w-8 text-center">
-                {speed}ms
-              </span>
-            </div>
           </div>
 
-          {/* Second Row - Node/Edge Controls */}
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <div className="flex items-center gap-1">
-              <input
-                type="text"
-                value={nodeLabel}
-                onChange={(e) => setNodeLabel(e.target.value)}
-                placeholder="Node label"
-                className="px-2 py-1 text-xs rounded border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 text-blue-900 dark:text-blue-200 w-20"
-              />
+          {/* Graph Editing Controls Section */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {/* Node Controls */}
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
+                <input
+                  type="text"
+                  value={nodeLabel}
+                  onChange={(e) => setNodeLabel(e.target.value)}
+                  placeholder="Node label"
+                  className="px-2 py-1 text-sm rounded border-0 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-green-500 outline-none w-24"
+                />
+                <button
+                  onClick={addNode}
+                  className="px-3 py-1 text-sm font-medium rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors duration-200"
+                >
+                  ➕ Add
+                </button>
+                <button
+                  onClick={() =>
+                    nodes.length > 0 && removeNode(nodes[nodes.length - 1].id)
+                  }
+                  className="px-3 py-1 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors duration-200"
+                >
+                  ➖ Remove
+                </button>
+              </div>
+
+              {/* Edge Type Toggle */}
               <button
-                onClick={addNode}
-                className="px-2 py-1 text-xs rounded bg-green-600 text-white font-medium shadow hover:bg-green-700 transition-colors"
+                onClick={() => {
+                  if (edgeType === "directed") {
+                    setEdges((eds) => {
+                      let newEdges = [...eds];
+                      eds.forEach((e) => {
+                        const revId = `e${e.target}-${e.source}`;
+                        if (!eds.some((ee) => ee.id === revId)) {
+                          newEdges.push({
+                            id: revId,
+                            source: e.target,
+                            target: e.source,
+                            weight: e.weight,
+                          });
+                        }
+                      });
+                      return newEdges;
+                    });
+                    setEdgeType("undirected");
+                  } else {
+                    setEdges((eds) =>
+                      eds.filter(
+                        (e) =>
+                          !eds.some(
+                            (ee) =>
+                              ee.source === e.target &&
+                              ee.target === e.source &&
+                              ee.id !== e.id
+                          ) || e.source < e.target
+                      )
+                    );
+                    setEdgeType("directed");
+                  }
+                }}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 ${
+                  edgeType === "directed"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
+                    : "bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
+                }`}
               >
-                Add Node
-              </button>
-              <button
-                onClick={() =>
-                  nodes.length > 0 && removeNode(nodes[nodes.length - 1].id)
-                }
-                className="px-2 py-1 text-xs rounded bg-red-600 text-white font-medium shadow hover:bg-red-700 transition-colors"
-              >
-                Remove Last
+                {edgeType === "directed" ? "🔄 Directed" : "↔️ Undirected"}
               </button>
             </div>
 
-            <button
-              onClick={() => {
-                if (edgeType === "directed") {
-                  setEdges((eds) => {
-                    let newEdges = [...eds];
-                    eds.forEach((e) => {
-                      const revId = `e${e.target}-${e.source}`;
-                      if (!eds.some((ee) => ee.id === revId)) {
-                        newEdges.push({
-                          id: revId,
-                          source: e.target,
-                          target: e.source,
-                          weight: e.weight,
-                        });
-                      }
-                    });
-                    return newEdges;
-                  });
-                  setEdgeType("undirected");
-                } else {
-                  setEdges((eds) =>
-                    eds.filter(
-                      (e) =>
-                        !eds.some(
-                          (ee) =>
-                            ee.source === e.target &&
-                            ee.target === e.source &&
-                            ee.id !== e.id
-                        ) || e.source < e.target
-                    )
-                  );
-                  setEdgeType("directed");
-                }
-              }}
-              className={
-                "px-2 py-1 text-xs rounded font-medium shadow transition-colors " +
-                (edgeType === "directed"
-                  ? "bg-blue-500 text-white hover:bg-blue-600"
-                  : "bg-purple-500 text-white hover:bg-purple-600")
-              }
-            >
-              {edgeType === "directed" ? "Directed" : "Undirected"}
-            </button>
-
-            {/* Path Display */}
+            {/* Path Result Display */}
             {path.length > 0 && (
-              <div className="flex items-center gap-2 ml-auto">
-                <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                  Path: {path.join(" → ")}
-                </span>
+              <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg px-4 py-2 border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                    🎯 Path:
+                  </span>
+                  <span className="text-sm font-mono text-blue-800 dark:text-blue-200 bg-white dark:bg-slate-800 px-2 py-1 rounded border">
+                    {path.join(" → ")}
+                  </span>
+                </div>
                 {(() => {
                   if (path.length < 2) return null;
                   let cost = 0;
@@ -775,9 +788,14 @@ export default function GraphDijkstra() {
                     cost += Number(edge.weight) || 0;
                   }
                   return (
-                    <span className="text-xs font-semibold text-blue-900 dark:text-blue-200 bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">
-                      Cost: {cost}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                        💰 Cost:
+                      </span>
+                      <span className="text-sm font-bold text-white bg-blue-600 px-2 py-1 rounded shadow">
+                        {cost}
+                      </span>
+                    </div>
                   );
                 })()}
               </div>
@@ -787,7 +805,7 @@ export default function GraphDijkstra() {
       </div>
 
       {/* Graph Canvas */}
-      <div className="flex-1 min-h-0 relative">
+      <div className="flex-1 min-h-0 relative bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-950">
         <svg
           ref={svgRef}
           width="100%"
@@ -816,8 +834,9 @@ export default function GraphDijkstra() {
               <path
                 d="M 20 0 L 0 0 0 20"
                 fill="none"
-                stroke={isDark ? "#374151" : "#e5e7eb"}
+                stroke={isDark ? "#334155" : "#e2e8f0"}
                 strokeWidth="1"
+                opacity="0.5"
               />
             </pattern>
             <filter
@@ -829,10 +848,25 @@ export default function GraphDijkstra() {
             >
               <feDropShadow
                 dx="0"
+                dy="4"
+                stdDeviation="3"
+                floodColor={isDark ? "#000" : "#64748b"}
+                floodOpacity="0.25"
+              />
+            </filter>
+            <filter
+              id="edgeShadow"
+              x="-20%"
+              y="-20%"
+              width="140%"
+              height="140%"
+            >
+              <feDropShadow
+                dx="0"
                 dy="2"
                 stdDeviation="2"
-                floodColor={isDark ? "#000" : "#888"}
-                floodOpacity="0.18"
+                floodColor={isDark ? "#000" : "#64748b"}
+                floodOpacity="0.15"
               />
             </filter>
           </defs>
@@ -918,16 +952,16 @@ export default function GraphDijkstra() {
               ? "#2563eb"
               : isDark
               ? "#1e293b"
-              : "#f3f4f6";
+              : "#f8fafc";
             const labelStroke = isFinalPath
               ? "#1e40af"
               : isDark
-              ? "#f3f4f6"
-              : "#d1d5db";
+              ? "#475569"
+              : "#cbd5e1";
             const labelText = isFinalPath
               ? "#fff"
               : isDark
-              ? "#f3f4f6"
+              ? "#f1f5f9"
               : "#334155";
 
             return (
@@ -935,9 +969,10 @@ export default function GraphDijkstra() {
                 <path
                   d={edgePath}
                   stroke={edgeColor}
-                  strokeWidth={isFinalPath || edgeClass ? 7 : 4}
-                  opacity={isFinalPath || edgeClass ? 0.95 : 0.7}
+                  strokeWidth={isFinalPath || edgeClass ? 8 : 5}
+                  opacity={isFinalPath || edgeClass ? 0.95 : 0.8}
                   fill="none"
+                  filter="url(#edgeShadow)"
                   className={edgeClass}
                   style={{ cursor: "grab" }}
                   onMouseDown={(e) =>
@@ -947,19 +982,20 @@ export default function GraphDijkstra() {
                 <path
                   d={arrow}
                   fill={edgeColor}
-                  opacity={isFinalPath || edgeClass ? 0.95 : 0.7}
+                  opacity={isFinalPath || edgeClass ? 0.95 : 0.8}
+                  filter="url(#edgeShadow)"
                   className={edgeClass}
                   style={{
                     stroke: edgeColor,
-                    strokeWidth: isFinalPath || edgeClass ? 3.5 : 2.2,
+                    strokeWidth: isFinalPath || edgeClass ? 4 : 2.5,
                   }}
                 />
                 {inlineEditEdgeId === edge.id ? (
                   <foreignObject
-                    x={labelX - 18}
-                    y={labelY - 14}
-                    width={36}
-                    height={28}
+                    x={labelX - 20}
+                    y={labelY - 16}
+                    width={40}
+                    height={32}
                   >
                     <input
                       type="number"
@@ -967,16 +1003,17 @@ export default function GraphDijkstra() {
                       value={inlineEditValue}
                       autoFocus
                       style={{
-                        width: 34,
-                        height: 26,
+                        width: 38,
+                        height: 30,
                         fontSize: 14,
                         textAlign: "center",
-                        borderRadius: 6,
-                        border: "2px solid #fbbf24",
-                        background: isDark ? "#1e293b" : "#fffbe6",
-                        color: isDark ? "#f3f4f6" : "#334155",
+                        borderRadius: 8,
+                        border: "2px solid #f59e0b",
+                        background: isDark ? "#1e293b" : "#fffbeb",
+                        color: isDark ? "#f1f5f9" : "#334155",
                         fontWeight: 600,
                         outline: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                       }}
                       onChange={(e) => setInlineEditValue(e.target.value)}
                       onBlur={() => {
@@ -1026,11 +1063,12 @@ export default function GraphDijkstra() {
                     <circle
                       cx={labelX}
                       cy={labelY}
-                      r="13"
+                      r="16"
                       fill={labelBg}
                       stroke={labelStroke}
-                      strokeWidth={isFinalPath ? 2 : 1}
+                      strokeWidth={isFinalPath ? 3 : 2}
                       opacity={0.95}
+                      filter="url(#nodeShadow)"
                       className={isFinalPath ? "animate-path-pulse" : ""}
                     />
                     <text
@@ -1038,8 +1076,8 @@ export default function GraphDijkstra() {
                       y={labelY}
                       textAnchor="middle"
                       dominantBaseline="central"
-                      fontSize="13"
-                      fontWeight={isFinalPath ? "bold" : "500"}
+                      fontSize="14"
+                      fontWeight={isFinalPath ? "bold" : "600"}
                       fill={labelText}
                       style={{ letterSpacing: 0.5 }}
                       className={isFinalPath ? "animate-path-pulse" : ""}
@@ -1070,10 +1108,11 @@ export default function GraphDijkstra() {
                     ).path
                   }
                   stroke="#6366f1"
-                  strokeWidth={3}
+                  strokeWidth={4}
                   opacity={0.7}
                   fill="none"
-                  strokeDasharray="6 4"
+                  strokeDasharray="8 6"
+                  filter="url(#edgeShadow)"
                 />
               );
             })()}
@@ -1095,8 +1134,8 @@ export default function GraphDijkstra() {
               }
             }
             if (!isFinalPath && highlight.node === node.id) {
-              nodeColor = "#f59e42"; // orange for visit
-              nodeStrokeColor = "#f59e42";
+              nodeColor = "#f59e0b"; // amber for visit
+              nodeStrokeColor = "#d97706";
               nodeTextColor = "#fff";
               nodeClass = "animate-path-pulse";
             }
@@ -1105,13 +1144,13 @@ export default function GraphDijkstra() {
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r="27"
+                  r="30"
                   fill={nodeColor}
                   stroke={nodeStrokeColor}
-                  strokeWidth={isFinalPath || nodeClass ? 4 : 2}
+                  strokeWidth={isFinalPath || nodeClass ? 5 : 3}
                   filter="url(#nodeShadow)"
                   className={
-                    "cursor-move hover:fill-blue-50" +
+                    "cursor-move hover:opacity-90 transition-opacity duration-200" +
                     (nodeClass ? " animate-path-pulse" : "")
                   }
                   onMouseDown={(e) => {
@@ -1138,7 +1177,7 @@ export default function GraphDijkstra() {
                   y={node.y}
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fontSize="16"
+                  fontSize="18"
                   fontWeight="bold"
                   fill={nodeTextColor}
                   className={
@@ -1163,12 +1202,12 @@ export default function GraphDijkstra() {
             top: deleteMenuPos.y,
             zIndex: 1000,
             background: isDark ? "#1e293b" : "#fff",
-            border: "1px solid #fbbf24",
-            borderRadius: 8,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            padding: 8,
-            minWidth: 90,
-            color: isDark ? "#f3f4f6" : "#334155",
+            border: `2px solid ${isDark ? "#ef4444" : "#dc2626"}`,
+            borderRadius: 12,
+            boxShadow: "0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+            padding: 12,
+            minWidth: 120,
+            color: isDark ? "#f1f5f9" : "#334155",
           }}
           onMouseLeave={() => {
             setEdgeToDelete("");
@@ -1176,14 +1215,14 @@ export default function GraphDijkstra() {
           }}
         >
           <button
-            className="px-3 py-1 rounded bg-red-600 text-white font-bold shadow hover:bg-red-700 transition-colors w-full"
+            className="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold shadow-md hover:bg-red-700 transition-all duration-200 w-full transform hover:scale-105"
             onClick={() => {
               setEdges((eds) => eds.filter((e) => e.id !== edgeToDelete));
               setEdgeToDelete("");
               setDeleteMenuPos(null);
             }}
           >
-            Remove Edge
+            🗑️ Remove Edge
           </button>
         </div>
       )}
