@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+} from "react";
 
 // Helper to run Dijkstra's algorithm and record steps
 function dijkstraWithSteps(nodes, edges, startId, endId) {
@@ -179,7 +185,7 @@ export default function GraphDijkstra() {
   const [resetting, setResetting] = useState(false);
   const [algoSteps, setAlgoSteps] = useState([]);
   const [algoStepIndex, setAlgoStepIndex] = useState(-1);
-  const [paused, setPaused] = useState(false); // --- Pause/Resume and Step Controls ---
+  const [paused, setPaused] = useState(true); // Default to paused so Resume is shown initially
   const svgRef = useRef(null);
   const [svgSize, setSvgSize] = useState({ width: 600, height: 400 });
   const pathRef = useRef(path);
@@ -241,14 +247,47 @@ export default function GraphDijkstra() {
 
   // Step forward/backward handlers
   const handleStepForward = () => {
-    if (algoSteps.length > 0 && algoStepIndex < algoSteps.length - 1) {
+    if (algoSteps.length === 0) {
+      // If not run yet, run Dijkstra and go to first step
+      const steps = dijkstraWithSteps(nodes, edges, start, end);
+      setAlgoSteps(steps);
+      setAlgoStepIndex(1); // Step forward to first step after initial
+      setPaused(false);
+      setPath([]);
+      setPathStep(0);
+      return;
+    }
+    if (algoStepIndex < algoSteps.length - 1) {
       setAlgoStepIndex((i) => i + 1);
     }
   };
   const handleStepBack = () => {
-    if (algoSteps.length > 0 && algoStepIndex > 0) {
+    if (algoSteps.length === 0) {
+      // If not run yet, run Dijkstra and go to initial step
+      const steps = dijkstraWithSteps(nodes, edges, start, end);
+      setAlgoSteps(steps);
+      setAlgoStepIndex(0);
+      setPaused(false);
+      setPath([]);
+      setPathStep(0);
+      return;
+    }
+    if (algoStepIndex > 0) {
       setAlgoStepIndex((i) => i - 1);
     }
+  };
+  const handlePausePlay = () => {
+    if (algoSteps.length === 0) {
+      // If not run yet, run Dijkstra and start playing (unpause)
+      const steps = dijkstraWithSteps(nodes, edges, start, end);
+      setAlgoSteps(steps);
+      setAlgoStepIndex(0);
+      setPaused(false); // Start playing
+      setPath([]);
+      setPathStep(0);
+      return;
+    }
+    setPaused((p) => !p);
   };
 
   // When algoStepIndex changes, update path if at 'done' step, else clear path
@@ -587,220 +626,216 @@ export default function GraphDijkstra() {
   return (
     <div className="w-full h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
       {/* Enhanced Controls Panel */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900/20 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="px-4 py-3">
-          {/* Algorithm Controls Section */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Start:
-                </label>
-                <select
-                  value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                  className="px-2 py-1 text-sm rounded border-0 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  {nodes.map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  End:
-                </label>
-                <select
-                  value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                  className="px-2 py-1 text-sm rounded border-0 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  {nodes.map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={runDijkstra}
-                className="px-4 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md hover:from-blue-700 hover:to-blue-800 transition-all duration-200 transform hover:scale-105"
+      <div className="flex-shrink-0 bg-gradient-to-r from-slate-50 to-blue-100 dark:from-slate-900 dark:to-blue-950 border-b border-slate-200 dark:border-slate-800 shadow-md rounded-b-2xl">
+        <div className="px-6 py-4 flex flex-col gap-3">
+          {/* Controls Group 1: Start/End/Run Dijkstra/Node/Add/Remove/Directed */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-2 p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl shadow border border-slate-200 dark:border-slate-700">
+            {/* Start Selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Start:
+              </label>
+              <select
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className="px-2 py-1 text-sm rounded-lg border-0 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-150 cursor-pointer"
               >
-                🚀 Run Dijkstra
+                {nodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* End Selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                End:
+              </label>
+              <select
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className="px-2 py-1 text-sm rounded-lg border-0 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-150 cursor-pointer"
+              >
+                {nodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Run Dijkstra Button */}
+            <button
+              onClick={runDijkstra}
+              className="px-7 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:from-green-600 hover:to-green-800 transition-all duration-200 transform hover:scale-105 border-2 border-green-700/30 min-w-[120px] cursor-pointer"
+            >
+              🚀 Run Dijkstra
+            </button>
+            {/* Node Label Input & Add/Remove */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={nodeLabel}
+                onChange={(e) => setNodeLabel(e.target.value)}
+                placeholder="   Node label"
+                className="px-2 py-1 text-sm rounded-lg border-0 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-green-500 outline-none w-24 transition-all duration-150"
+              />
+              <button
+                onClick={addNode}
+                className="px-5 py-1 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 shadow border-2 border-blue-700/30 min-w-[80px] cursor-pointer"
+              >
+                ➕ Add
+              </button>
+              <button
+                onClick={() =>
+                  nodes.length > 0 && removeNode(nodes[nodes.length - 1].id)
+                }
+                className="px-5 py-1 text-sm font-medium rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors duration-200 shadow border-2 border-pink-700/30 min-w-[80px] cursor-pointer"
+              >
+                ➖ Remove
               </button>
             </div>
-
-            {/* Algorithm Step Controls */}
-            {algoSteps.length > 0 && algoStepIndex >= 0 && (
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
-                <button
-                  onClick={handleStepBack}
-                  disabled={algoStepIndex <= 0}
-                  className={`px-3 py-1 text-sm rounded-md font-medium transition-all duration-200 ${
-                    algoStepIndex <= 0
-                      ? "bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
-                      : "bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500"
-                  }`}
-                  title="Step Back"
-                >
-                  ⏮️
-                </button>
-                <button
-                  onClick={() => setPaused((p) => !p)}
-                  className={`px-3 py-1 text-sm rounded-md font-medium transition-all duration-200 ${
-                    paused
-                      ? "bg-green-500 hover:bg-green-600 text-white"
-                      : "bg-amber-500 hover:bg-amber-600 text-white"
-                  }`}
-                  title={paused ? "Resume" : "Pause"}
-                >
-                  {paused ? "▶️" : "⏸️"}
-                </button>
-                <button
-                  onClick={handleStepForward}
-                  disabled={algoStepIndex >= algoSteps.length - 1}
-                  className={`px-3 py-1 text-sm rounded-md font-medium transition-all duration-200 ${
-                    algoStepIndex >= algoSteps.length - 1
-                      ? "bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
-                      : "bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500"
-                  }`}
-                  title="Step Forward"
-                >
-                  ⏭️
-                </button>
-                <div className="flex items-center gap-2 ml-2 pl-2 border-l border-slate-300 dark:border-slate-600">
-                  <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Speed:
-                  </label>
-                  <input
-                    type="range"
-                    min="50"
-                    max="2000"
-                    step="50"
-                    value={speed}
-                    onChange={(e) => setSpeed(Number(e.target.value))}
-                    className="accent-blue-600 w-20"
-                  />
-                  <span className="text-xs text-slate-500 dark:text-slate-400 w-12 text-center">
-                    {speed}ms
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Graph Editing Controls Section */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {/* Node Controls */}
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 shadow-sm border border-slate-200 dark:border-slate-600">
-                <input
-                  type="text"
-                  value={nodeLabel}
-                  onChange={(e) => setNodeLabel(e.target.value)}
-                  placeholder="Node label"
-                  className="px-2 py-1 text-sm rounded border-0 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-green-500 outline-none w-24"
-                />
-                <button
-                  onClick={addNode}
-                  className="px-3 py-1 text-sm font-medium rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors duration-200"
-                >
-                  ➕ Add
-                </button>
-                <button
-                  onClick={() =>
-                    nodes.length > 0 && removeNode(nodes[nodes.length - 1].id)
-                  }
-                  className="px-3 py-1 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors duration-200"
-                >
-                  ➖ Remove
-                </button>
-              </div>
-
-              {/* Edge Type Toggle */}
-              <button
-                onClick={() => {
-                  if (edgeType === "directed") {
-                    setEdges((eds) => {
-                      let newEdges = [...eds];
-                      eds.forEach((e) => {
-                        const revId = `e${e.target}-${e.source}`;
-                        if (!eds.some((ee) => ee.id === revId)) {
-                          newEdges.push({
-                            id: revId,
-                            source: e.target,
-                            target: e.source,
-                            weight: e.weight,
-                          });
-                        }
-                      });
-                      return newEdges;
+            {/* Directed/Undirected Toggle */}
+            <button
+              onClick={() => {
+                if (edgeType === "directed") {
+                  setEdges((eds) => {
+                    let newEdges = [...eds];
+                    eds.forEach((e) => {
+                      const revId = `e${e.target}-${e.source}`;
+                      if (!eds.some((ee) => ee.id === revId)) {
+                        newEdges.push({
+                          id: revId,
+                          source: e.target,
+                          target: e.source,
+                          weight: e.weight,
+                        });
+                      }
                     });
-                    setEdgeType("undirected");
-                  } else {
-                    setEdges((eds) =>
-                      eds.filter(
-                        (e) =>
-                          !eds.some(
-                            (ee) =>
-                              ee.source === e.target &&
-                              ee.target === e.source &&
-                              ee.id !== e.id
-                          ) || e.source < e.target
-                      )
-                    );
-                    setEdgeType("directed");
-                  }
-                }}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 ${
-                  edgeType === "directed"
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
-                    : "bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
-                }`}
-              >
-                {edgeType === "directed" ? "🔄 Directed" : "↔️ Undirected"}
-              </button>
-            </div>
-
-            {/* Path Result Display */}
-            {path.length > 0 && (
-              <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg px-4 py-2 border border-blue-200 dark:border-blue-700">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                    🎯 Path:
-                  </span>
-                  <span className="text-sm font-mono text-blue-800 dark:text-blue-200 bg-white dark:bg-slate-800 px-2 py-1 rounded border">
-                    {path.join(" → ")}
-                  </span>
-                </div>
-                {(() => {
-                  if (path.length < 2) return null;
-                  let cost = 0;
-                  for (let i = 0; i < path.length - 1; i++) {
-                    const edge = edges.find(
-                      (e) => e.source === path[i] && e.target === path[i + 1]
-                    );
-                    if (!edge) return null;
-                    cost += Number(edge.weight) || 0;
-                  }
-                  return (
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                        💰 Cost:
-                      </span>
-                      <span className="text-sm font-bold text-white bg-blue-600 px-2 py-1 rounded shadow">
-                        {cost}
-                      </span>
-                    </div>
+                    return newEdges;
+                  });
+                  setEdgeType("undirected");
+                } else {
+                  setEdges((eds) =>
+                    eds.filter(
+                      (e) =>
+                        !eds.some(
+                          (ee) =>
+                            ee.source === e.target &&
+                            ee.target === e.source &&
+                            ee.id !== e.id
+                        ) || e.source < e.target
+                    )
                   );
-                })()}
-              </div>
-            )}
+                  setEdgeType("directed");
+                }
+              }}
+              className={`px-7 py-2 text-sm font-semibold rounded-xl shadow-lg border-2 border-yellow-700/30 transition-all duration-200 min-w-[130px] cursor-pointer ${
+                edgeType === "directed"
+                  ? "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700"
+                  : "bg-gradient-to-r from-indigo-500 to-indigo-700 text-white hover:from-indigo-600 hover:to-indigo-800"
+              }`}
+            >
+              {edgeType === "directed" ? "🔄 Directed" : "↔️ Undirected"}
+            </button>
           </div>
+
+          {/* Controls Group 2: Speed Slider & Step Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-4 p-3 bg-blue-50/80 dark:bg-blue-900/60 rounded-xl shadow border border-blue-200 dark:border-blue-700">
+            {/* Step Back Button */}
+            <button
+              onClick={handleStepBack}
+              className={`px-5 py-1 text-sm rounded-lg font-medium transition-all duration-200 shadow-sm border-2 border-slate-200 dark:border-slate-700 min-w-[48px] cursor-pointer ${
+                algoStepIndex <= 0
+                  ? "bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
+                  : "bg-cyan-200 dark:bg-cyan-600 text-cyan-700 dark:text-cyan-100 hover:bg-cyan-300 dark:hover:bg-cyan-500"
+              }`}
+              title="Step Back"
+              disabled={algoStepIndex <= 0}
+            >
+              ⏮️
+            </button>
+            {/* Pause/Resume Button */}
+            <button
+              onClick={handlePausePlay}
+              className={`px-5 py-1 text-sm rounded-lg font-medium transition-all duration-200 shadow-sm border-2 border-slate-200 dark:border-slate-700 min-w-[70px] cursor-pointer ${
+                paused
+                  ? "bg-purple-500 hover:bg-purple-600 text-white"
+                  : "bg-orange-500 hover:bg-orange-600 text-white"
+              }`}
+              title={paused ? "Resume" : "Pause"}
+            >
+              {paused ? "▶️" : "⏸️"}
+            </button>
+            {/* Step Forward Button */}
+            <button
+              onClick={handleStepForward}
+              className={`px-5 py-1 text-sm rounded-lg font-medium transition-all duration-200 shadow-sm border-2 border-slate-200 dark:border-slate-700 min-w-[48px] cursor-pointer ${
+                algoSteps.length > 0 && algoStepIndex >= algoSteps.length - 1
+                  ? "bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
+                  : "bg-cyan-200 dark:bg-cyan-600 text-cyan-700 dark:text-cyan-100 hover:bg-cyan-300 dark:hover:bg-cyan-500"
+              }`}
+              title="Step Forward"
+              disabled={
+                algoSteps.length > 0 && algoStepIndex >= algoSteps.length - 1
+              }
+            >
+              ⏭️
+            </button>
+            {/* Speed Slider */}
+            <div className="flex items-center gap-2 ml-3 pl-3 border-l border-slate-300 dark:border-slate-600">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                Speed:
+              </label>
+              <input
+                type="range"
+                min="50"
+                max="3000"
+                step="50"
+                value={speed}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+                className="accent-blue-600 w-24 cursor-pointer"
+              />
+              <span className="text-xs text-slate-500 dark:text-slate-400 w-12 text-center">
+                {speed}ms
+              </span>
+            </div>
+          </div>
+
+          {/* Path Result Display (unchanged) */}
+          {path.length > 0 && (
+            <div className="flex items-center gap-3 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-xl px-5 py-2 border border-blue-200 dark:border-blue-700 shadow justify-center">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                  🎯 Path:
+                </span>
+                <span className="text-sm font-mono text-blue-800 dark:text-blue-200 bg-white dark:bg-slate-800 px-2 py-1 rounded border border-blue-300 dark:border-blue-800 shadow-sm">
+                  {path.join(" → ")}
+                </span>
+              </div>
+              {(() => {
+                if (path.length < 2) return null;
+                let cost = 0;
+                for (let i = 0; i < path.length - 1; i++) {
+                  const edge = edges.find(
+                    (e) => e.source === path[i] && e.target === path[i + 1]
+                  );
+                  if (!edge) return null;
+                  cost += Number(edge.weight) || 0;
+                }
+                return (
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                      💰 Cost:
+                    </span>
+                    <span className="text-sm font-bold text-white bg-blue-600 px-2 py-1 rounded shadow border border-blue-800">
+                      {cost}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
       </div>
 
@@ -917,7 +952,7 @@ export default function GraphDijkstra() {
               25,
               edge.control
             );
-            
+
             // Arrowhead tangent at end
             const arrowAngle = Math.atan2(ey - cy, ex - cx);
             const arrowLength = 20;
@@ -1192,6 +1227,8 @@ export default function GraphDijkstra() {
             );
           })}
         </svg>
+        {/* Helper Button (bottom right) */}
+        <HelperButton />
       </div>
 
       {edgeToDelete && deleteMenuPos && (
@@ -1204,7 +1241,8 @@ export default function GraphDijkstra() {
             background: isDark ? "#1e293b" : "#fff",
             border: `2px solid ${isDark ? "#ef4444" : "#dc2626"}`,
             borderRadius: 12,
-            boxShadow: "0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+            boxShadow:
+              "0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
             padding: 12,
             minWidth: 120,
             color: isDark ? "#f1f5f9" : "#334155",
@@ -1227,5 +1265,85 @@ export default function GraphDijkstra() {
         </div>
       )}
     </div>
+  );
+}
+
+// HelperButton component for instructions/features
+function HelperButton() {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-900 border-2 border-blue-500 shadow-xl rounded-full w-14 h-14 flex items-center justify-center text-3xl font-extrabold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-800 transition-all duration-200 cursor-pointer"
+        title="Show Instructions"
+        style={{ boxShadow: "0 8px 32px 0 rgba(0,0,0,0.18)" }}
+      >
+        <span style={{ fontFamily: "monospace", fontWeight: 900 }}>?</span>
+      </button>
+      {open && (
+        <div
+          className="fixed bottom-24 right-6 z-50 w-96 max-w-[90vw] bg-white dark:bg-gray-900 border-2 border-blue-500 rounded-2xl shadow-2xl p-6 text-slate-800 dark:text-slate-100 animate-fade-in"
+          style={{ boxShadow: "0 8px 32px 0 rgba(0,0,0,0.18)" }}
+        >
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-lg font-bold text-blue-700 dark:text-blue-300">
+              Visualizer Instructions
+            </span>
+            <button
+              onClick={() => setOpen(false)}
+              className="text-2xl font-bold text-blue-500 hover:text-blue-700 cursor-pointer "
+            >
+              ×
+            </button>
+          </div>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li>
+              <b>Move Nodes:</b> Right-click and drag a node to move it.
+            </li>
+            <li>
+              <b>Create Edge:</b> Left-click and drag from one node to another.
+            </li>
+            <li>
+              <b>Edit Edge Weight:</b> Click edge label to edit. Press
+              Enter/Escape or click away to save/cancel.
+            </li>
+            <li>
+              <b>Delete Edge:</b> Right-click edge label and confirm.
+            </li>
+            <li>
+              <b>Add Node:</b> Enter label and click <b>Add</b>.
+            </li>
+            <li>
+              <b>Remove Node:</b> Click <b>Remove</b> to delete the last node.
+            </li>
+            <li>
+              <b>Directed/Undirected:</b> Toggle edge directionality.
+            </li>
+            <li>
+              <b>Run Dijkstra:</b> Select start/end, then click{" "}
+              <b>Run Dijkstra</b>.
+            </li>
+            <li>
+              <b>Step Controls:</b> Use ⏮️, ▶️/⏸️, ⏭️ to step/pause/resume the
+              algorithm.
+            </li>
+            <li>
+              <b>Speed:</b> Adjust the slider to change animation speed.
+            </li>
+            <li>
+              <b>Path & Cost:</b> Shortest path and cost are shown after
+              completion.
+            </li>
+            <li>
+              <b>Edge Bending:</b> Drag edge curve to adjust its shape.
+            </li>
+            <li>
+              <b>Dark Mode:</b> UI adapts to your system theme.
+            </li>
+          </ul>
+        </div>
+      )}
+    </>
   );
 }
