@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 
-const GraphDijkstra = dynamic(() => import("../components/GraphDijkstra"), {
+const GraphDijkstra = dynamic(() => import("../components/GraphDijkstra.js"), {
   ssr: false,
 });
 
