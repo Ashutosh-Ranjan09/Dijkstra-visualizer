@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 
 // Helper to run Dijkstra's algorithm and record steps
 function dijkstraWithSteps(nodes, edges, startId, endId) {
@@ -179,9 +179,23 @@ export default function GraphDijkstra() {
   const [resetting, setResetting] = useState(false);
   const [algoSteps, setAlgoSteps] = useState([]);
   const [algoStepIndex, setAlgoStepIndex] = useState(-1);
+  const [paused, setPaused] = useState(false); // --- Pause/Resume and Step Controls ---
   const svgRef = useRef(null);
+  const [svgSize, setSvgSize] = useState({ width: 600, height: 400 });
   const pathRef = useRef(path);
   pathRef.current = path;
+
+  useLayoutEffect(() => {
+    function updateSize() {
+      if (svgRef.current && svgRef.current.parentElement) {
+        const rect = svgRef.current.parentElement.getBoundingClientRect();
+        setSvgSize({ width: rect.width, height: rect.height });
+      }
+    }
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
 
   // Detect dark mode for better color adaptation
   const isDark =
@@ -191,6 +205,7 @@ export default function GraphDijkstra() {
 
   const runDijkstra = () => {
     setResetting(true);
+    setPaused(false);
     setPath([]);
     setPathStep(0);
     setAlgoSteps([]);
@@ -208,7 +223,8 @@ export default function GraphDijkstra() {
     if (
       algoSteps.length > 0 &&
       algoStepIndex >= 0 &&
-      algoStepIndex < algoSteps.length
+      algoStepIndex < algoSteps.length &&
+      !paused
     ) {
       if (algoSteps[algoStepIndex].type === "done") {
         // Show final path propagation as before
@@ -221,7 +237,34 @@ export default function GraphDijkstra() {
       }, speed);
       return () => clearTimeout(timer);
     }
-  }, [algoSteps, algoStepIndex, speed]);
+  }, [algoSteps, algoStepIndex, speed, paused]);
+
+  // Step forward/backward handlers
+  const handleStepForward = () => {
+    if (algoSteps.length > 0 && algoStepIndex < algoSteps.length - 1) {
+      setAlgoStepIndex((i) => i + 1);
+    }
+  };
+  const handleStepBack = () => {
+    if (algoSteps.length > 0 && algoStepIndex > 0) {
+      setAlgoStepIndex((i) => i - 1);
+    }
+  };
+
+  // When algoStepIndex changes, update path if at 'done' step, else clear path
+  useEffect(() => {
+    if (
+      algoSteps.length > 0 &&
+      algoStepIndex >= 0 &&
+      algoStepIndex < algoSteps.length
+    ) {
+      if (algoSteps[algoStepIndex].type === "done") {
+        setPath(algoSteps[algoStepIndex].path);
+      } else {
+        setPath([]);
+      }
+    }
+  }, [algoSteps, algoStepIndex]);
 
   // Highlighting logic for algorithm steps
   let highlight = { node: null, relaxEdge: null, updateEdge: null };
@@ -542,8 +585,8 @@ export default function GraphDijkstra() {
   }, [nodes]);
 
   return (
-    <div className="w-full">
-      <div className="mb-4 flex flex-wrap gap-4 items-center justify-center bg-blue-50 dark:bg-gray-800/80 p-4 rounded-lg border border-blue-100 dark:border-gray-700 shadow">
+    <div className="w-full h-full min-h-0 min-w-0 bg-white flex flex-col items-center justify-center gap-1 p-1 dark:bg-gray-800 rounded-lg shadow-lg">
+      <div className="w-[100%] h-[20%] flex items-center justify-center gap-1 bg-blue-100 dark:bg-blue-900 rounded-lg shadow-md flex-wrap ">
         {/* Controls */}
         <label className="font-semibold text-blue-900 dark:text-blue-200">
           Start:
@@ -580,6 +623,45 @@ export default function GraphDijkstra() {
           Run Dijkstra
         </button>
 
+        {/* --- Dijkstra Animation Controls --- */}
+        {algoSteps.length > 0 && algoStepIndex >= 0 && (
+          <div className="flex items-center gap-2 ml-2">
+            <button
+              onClick={handleStepBack}
+              disabled={algoStepIndex <= 0}
+              className={`px-2 py-1 rounded font-bold shadow transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 ${
+                algoStepIndex <= 0 ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              title="Step Back"
+            >
+              ⏮️
+            </button>
+            <button
+              onClick={() => setPaused((p) => !p)}
+              className={`px-2 py-1 rounded font-bold shadow transition-colors ${
+                paused
+                  ? "bg-green-500 hover:bg-green-600 text-white"
+                  : "bg-yellow-500 hover:bg-yellow-600 text-white"
+              }`}
+              title={paused ? "Resume" : "Pause"}
+            >
+              {paused ? "▶️ Resume" : "⏸️ Pause"}
+            </button>
+            <button
+              onClick={handleStepForward}
+              disabled={algoStepIndex >= algoSteps.length - 1}
+              className={`px-2 py-1 rounded font-bold shadow transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 ${
+                algoStepIndex >= algoSteps.length - 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+              title="Step Forward"
+            >
+              ⏭️
+            </button>
+          </div>
+        )}
+
         {/* Add/Remove Node */}
         <input
           type="text"
@@ -602,41 +684,6 @@ export default function GraphDijkstra() {
         >
           Remove Last Node
         </button>
-
-        {/* Add/Remove Edge */}
-        {/* <select
-          value={edgeSource}
-          onChange={(e) => setEdgeSource(e.target.value)}
-          className="ml-2 p-1 rounded border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 text-blue-900 dark:text-blue-200"
-        >
-          <option value="">Edge Source</option>
-          {nodes.map((n) => (
-            <option key={n.id} value={n.id}>
-              {n.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={edgeTarget}
-          onChange={(e) => setEdgeTarget(e.target.value)}
-          className="ml-2 p-1 rounded border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 text-blue-900 dark:text-blue-200"
-        >
-          <option value="">Edge Target</option>
-          {nodes.map((n) => (
-            <option key={n.id} value={n.id}>
-              {n.label}
-            </option>
-          ))}
-        </select> */}
-        {/* <button
-          onClick={() =>
-            edges.length > 0 && removeEdge(edges[edges.length - 1].id)
-          }
-          className="px-3 py-1 rounded bg-pink-600 text-white font-bold shadow hover:bg-pink-700 transition-colors"
-        >
-          Remove Last Edge
-        </button> */}
-
         {/* Edit Edge Weight */}
         {false && (
           <>
@@ -758,16 +805,16 @@ export default function GraphDijkstra() {
                 </span>
               );
             })()}
-          </span>
-        )}
-      </div>
-
-      <div className="border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900">
+            </span>
+          )}
+          </div>
+      <div className="flex-1 w-full min-h-0 flex items-stretch">
         <svg
           ref={svgRef}
-          width="600"
-          height="400"
-          className="cursor-crosshair"
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${svgSize.width} ${svgSize.height}`}
+          className="cursor-crosshair w-full h-full block"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
@@ -1167,10 +1214,6 @@ export default function GraphDijkstra() {
           </button>
         </div>
       )}
-
-      <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
-        Drag nodes to reposition them
-      </div>
     </div>
   );
 }
