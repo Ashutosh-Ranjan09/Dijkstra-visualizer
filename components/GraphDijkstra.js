@@ -38,7 +38,8 @@ function dijkstraWithSteps(nodes, edges, startId, endId) {
           from: minNode,
           to: e.target,
         });
-        const alt = distances[minNode] + (e.weight || 1);
+        // FIX: Use e.weight if defined, otherwise default to 1 (so zero is valid)
+        const alt = distances[minNode] + (e.weight != null ? e.weight : 1);
         if (alt < distances[e.target]) {
           distances[e.target] = alt;
           prev[e.target] = minNode;
@@ -369,7 +370,10 @@ export default function GraphDijkstra() {
 
   const handleEditEdgeWeight = () => {
     const weight = Number(editEdgeWeight);
-    if (!editEdgeId || isNaN(weight) || weight < 0) return;
+    if (!editEdgeId || isNaN(weight) || weight < 0) {
+      alert("Please enter a non-negative number for edge weight.");
+      return;
+    }
     setEdges((eds) =>
       eds.map((e) => (e.id === editEdgeId ? { ...e, weight } : e))
     );
@@ -494,6 +498,7 @@ export default function GraphDijkstra() {
   const [inlineEditValue, setInlineEditValue] = useState("");
   const [edgeToDelete, setEdgeToDelete] = useState("");
   const [deleteMenuPos, setDeleteMenuPos] = useState(null);
+  const [inlineEditError, setInlineEditError] = useState(""); // NEW: error for inline edge edit
 
   const [bendDrag, setBendDrag] = useState({ edgeId: null, offset: null });
 
@@ -968,58 +973,100 @@ export default function GraphDijkstra() {
                   <foreignObject
                     x={labelX - 20}
                     y={labelY - 16}
-                    width={40}
-                    height={32}
+                    width={60}
+                    height={38}
                   >
-                    <input
-                      type="number"
-                      min="0"
-                      value={inlineEditValue}
-                      autoFocus
+                    <div
                       style={{
-                        width: 38,
-                        height: 30,
-                        fontSize: 14,
-                        textAlign: "center",
-                        borderRadius: 8,
-                        border: "2px solid #f59e0b",
-                        background: isDark ? "#1e293b" : "#fffbeb",
-                        color: isDark ? "#f1f5f9" : "#334155",
-                        fontWeight: 600,
-                        outline: "none",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
                       }}
-                      onChange={(e) => setInlineEditValue(e.target.value)}
-                      onBlur={() => {
-                        const weight = Number(inlineEditValue);
-                        if (!isNaN(weight) && weight >= 0) {
+                    >
+                      <input
+                        type="number"
+                        min="0"
+                        value={inlineEditValue}
+                        autoFocus
+                        style={{
+                          width: 38,
+                          height: 30,
+                          fontSize: 14,
+                          textAlign: "center",
+                          borderRadius: 8,
+                          border: inlineEditError
+                            ? "2px solid #dc2626"
+                            : "2px solid #f59e0b",
+                          background: isDark ? "#1e293b" : "#fffbeb",
+                          color: isDark ? "#f1f5f9" : "#334155",
+                          fontWeight: 600,
+                          outline: "none",
+                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                        }}
+                        onChange={(e) => {
+                          setInlineEditValue(e.target.value);
+                          setInlineEditError("");
+                        }}
+                        onBlur={() => {
+                          const weight = Number(inlineEditValue);
+                          if (
+                            inlineEditValue === "" ||
+                            isNaN(weight) ||
+                            weight < 0
+                          ) {
+                            setInlineEditError("Enter a non-negative number");
+                            setTimeout(() => setInlineEditError(""), 1200);
+                            setInlineEditEdgeId("");
+                            setInlineEditValue("");
+                            return;
+                          }
                           setEdges((eds) =>
                             eds.map((e) =>
                               e.id === edge.id ? { ...e, weight } : e
                             )
                           );
-                        }
-                        setInlineEditEdgeId("");
-                        setInlineEditValue("");
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          const weight = Number(inlineEditValue);
-                          if (!isNaN(weight) && weight >= 0) {
+                          setInlineEditEdgeId("");
+                          setInlineEditValue("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const weight = Number(inlineEditValue);
+                            if (
+                              inlineEditValue === "" ||
+                              isNaN(weight) ||
+                              weight < 0
+                            ) {
+                              setInlineEditError("Enter a non-negative number");
+                              setTimeout(() => setInlineEditError(""), 1200);
+                              setInlineEditEdgeId("");
+                              setInlineEditValue("");
+                              return;
+                            }
                             setEdges((eds) =>
                               eds.map((e) =>
                                 e.id === edge.id ? { ...e, weight } : e
                               )
                             );
+                            setInlineEditEdgeId("");
+                            setInlineEditValue("");
+                          } else if (e.key === "Escape") {
+                            setInlineEditEdgeId("");
+                            setInlineEditValue("");
                           }
-                          setInlineEditEdgeId("");
-                          setInlineEditValue("");
-                        } else if (e.key === "Escape") {
-                          setInlineEditEdgeId("");
-                          setInlineEditValue("");
-                        }
-                      }}
-                    />
+                        }}
+                      />
+                      {inlineEditError && (
+                        <span
+                          style={{
+                            color: "#dc2626",
+                            fontSize: 11,
+                            marginTop: 0,
+                          }}
+                        >
+                          {inlineEditError}
+                        </span>
+                      )}
+                    </div>
                   </foreignObject>
                 ) : (
                   <g
