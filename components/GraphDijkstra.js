@@ -6,7 +6,6 @@ import React, {
   useLayoutEffect,
 } from "react";
 
-// Helper to run Dijkstra's algorithm and record steps
 function dijkstraWithSteps(nodes, edges, startId, endId) {
   const distances = {};
   const prev = {};
@@ -53,7 +52,6 @@ function dijkstraWithSteps(nodes, edges, startId, endId) {
       }
     }
   }
-  // Reconstruct path
   let path = [];
   let u = endId;
   while (u) {
@@ -65,13 +63,11 @@ function dijkstraWithSteps(nodes, edges, startId, endId) {
   return steps;
 }
 
-// Helper to calculate arrow head points
 function getArrowHead(x1, y1, x2, y2, nodeRadius = 25) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
-  const arrowLength = 20; // Increased from 12
-  const arrowAngle = Math.PI / 4; // Increased from Math.PI / 6
+  const arrowLength = 20;
+  const arrowAngle = Math.PI / 4;
 
-  // Adjust end point to stop at node edge
   const adjustedX2 = x2 - Math.cos(angle) * nodeRadius;
   const adjustedY2 = y2 - Math.sin(angle) * nodeRadius;
 
@@ -89,17 +85,12 @@ function getArrowHead(x1, y1, x2, y2, nodeRadius = 25) {
   };
 }
 
-// Helper to calculate arrow head points for a quadratic Bezier curve
 function getArrowHeadBezier(x1, y1, cx, cy, x2, y2, nodeRadius = 25) {
-  // Find the tangent at t=1 (end of curve)
-  // Quadratic Bezier: B(t) = (1-t)^2*P0 + 2*(1-t)*t*C + t^2*P2
-  // Derivative at t=1: 2*(P2 - C)
   const dx = x2 - cx;
   const dy = y2 - cy;
   const angle = Math.atan2(dy, dx);
   const arrowLength = 20;
   const arrowAngle = Math.PI / 4;
-  // Adjust end point to stop at node edge
   const adjustedX2 = x2 - Math.cos(angle) * nodeRadius;
   const adjustedY2 = y2 - Math.sin(angle) * nodeRadius;
   const arrowX = adjustedX2 - Math.cos(angle) * arrowLength;
@@ -114,7 +105,6 @@ function getArrowHeadBezier(x1, y1, cx, cy, x2, y2, nodeRadius = 25) {
   };
 }
 
-// Helper to get a quadratic Bezier path for a flexible edge, now supports custom control point and tangential end
 function getEdgePathTangential(
   x1,
   y1,
@@ -123,7 +113,6 @@ function getEdgePathTangential(
   nodeRadius = 25,
   control = null
 ) {
-  // Compute default or custom control point
   const dx = x2 - x1;
   const dy = y2 - y1;
   const mx = (x1 + x2) / 2;
@@ -140,15 +129,11 @@ function getEdgePathTangential(
     cx = mx + perpX;
     cy = my + perpY;
   }
-  // Find tangent at t=1 (end of curve)
-  // Derivative: 2*(P2 - C)
   const tx = x2 - cx;
   const ty = y2 - cy;
   const angle = Math.atan2(ty, tx);
-  // Move end point back along tangent by nodeRadius
   const ex = x2 - Math.cos(angle) * nodeRadius;
   const ey = y2 - Math.sin(angle) * nodeRadius;
-  // Move start point forward along tangent at t=0
   const sx = x1 + Math.cos(Math.atan2(cy - y1, cx - x1)) * nodeRadius;
   const sy = y1 + Math.sin(Math.atan2(cy - y1, cx - x1)) * nodeRadius;
   return { path: `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`, cx, cy, ex, ey };
@@ -180,12 +165,12 @@ export default function GraphDijkstra() {
   const [draggedNode, setDraggedNode] = useState(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [pathAnimation, setPathAnimation] = useState(false);
-  const [pathStep, setPathStep] = useState(0); // For propagation animation
-  const [speed, setSpeed] = useState(350); // Propagation speed in ms
+  const [pathStep, setPathStep] = useState(0);
+  const [speed, setSpeed] = useState(350);
   const [resetting, setResetting] = useState(false);
   const [algoSteps, setAlgoSteps] = useState([]);
   const [algoStepIndex, setAlgoStepIndex] = useState(-1);
-  const [paused, setPaused] = useState(true); // Default to paused so Resume is shown initially
+  const [paused, setPaused] = useState(true);
   const svgRef = useRef(null);
   const [svgSize, setSvgSize] = useState({ width: 600, height: 400 });
   const pathRef = useRef(path);
@@ -203,7 +188,6 @@ export default function GraphDijkstra() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Detect dark mode for better color adaptation
   const isDark =
     typeof window !== "undefined" &&
     window.matchMedia &&
@@ -224,7 +208,6 @@ export default function GraphDijkstra() {
     }, 200);
   };
 
-  // Animate algorithm steps
   useEffect(() => {
     if (
       algoSteps.length > 0 &&
@@ -233,7 +216,6 @@ export default function GraphDijkstra() {
       !paused
     ) {
       if (algoSteps[algoStepIndex].type === "done") {
-        // Show final path propagation as before
         setPath(algoSteps[algoStepIndex].path);
         setPathStep(0);
         return;
@@ -245,13 +227,11 @@ export default function GraphDijkstra() {
     }
   }, [algoSteps, algoStepIndex, speed, paused]);
 
-  // Step forward/backward handlers
   const handleStepForward = () => {
     if (algoSteps.length === 0) {
-      // If not run yet, run Dijkstra and go to first step
       const steps = dijkstraWithSteps(nodes, edges, start, end);
       setAlgoSteps(steps);
-      setAlgoStepIndex(1); // Step forward to first step after initial
+      setAlgoStepIndex(1);
       setPaused(false);
       setPath([]);
       setPathStep(0);
@@ -263,7 +243,6 @@ export default function GraphDijkstra() {
   };
   const handleStepBack = () => {
     if (algoSteps.length === 0) {
-      // If not run yet, run Dijkstra and go to initial step
       const steps = dijkstraWithSteps(nodes, edges, start, end);
       setAlgoSteps(steps);
       setAlgoStepIndex(0);
@@ -278,11 +257,10 @@ export default function GraphDijkstra() {
   };
   const handlePausePlay = () => {
     if (algoSteps.length === 0) {
-      // If not run yet, run Dijkstra and start playing (unpause)
       const steps = dijkstraWithSteps(nodes, edges, start, end);
       setAlgoSteps(steps);
       setAlgoStepIndex(0);
-      setPaused(false); // Start playing
+      setPaused(false);
       setPath([]);
       setPathStep(0);
       return;
@@ -290,7 +268,6 @@ export default function GraphDijkstra() {
     setPaused((p) => !p);
   };
 
-  // When algoStepIndex changes, update path if at 'done' step, else clear path
   useEffect(() => {
     if (
       algoSteps.length > 0 &&
@@ -305,7 +282,6 @@ export default function GraphDijkstra() {
     }
   }, [algoSteps, algoStepIndex]);
 
-  // Highlighting logic for algorithm steps
   let highlight = { node: null, relaxEdge: null, updateEdge: null };
   if (
     algoSteps.length > 0 &&
@@ -320,7 +296,6 @@ export default function GraphDijkstra() {
     }
   }
 
-  // Animation effect: remove animation after 600ms
   useEffect(() => {
     if (pathAnimation) {
       const timer = setTimeout(() => setPathAnimation(false), 600);
@@ -328,7 +303,6 @@ export default function GraphDijkstra() {
     }
   }, [pathAnimation, path]);
 
-  // Animate path propagation
   useEffect(() => {
     if (path.length > 1) {
       setPathStep(0);
@@ -337,7 +311,7 @@ export default function GraphDijkstra() {
         step++;
         setPathStep(step);
         if (step >= path.length - 1) clearInterval(interval);
-      }, speed); // Use speed state
+      }, speed);
       return () => clearInterval(interval);
     } else {
       setPathStep(0);
@@ -364,7 +338,7 @@ export default function GraphDijkstra() {
     setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
   };
 
-  const [edgeType, setEdgeType] = useState("directed"); // 'directed' or 'undirected'
+  const [edgeType, setEdgeType] = useState("directed");
 
   const addEdgeManual = () => {
     if (!edgeSource || !edgeTarget || edgeSource === edgeTarget) return;
@@ -453,11 +427,9 @@ export default function GraphDijkstra() {
     setDraggedNode(null);
   }, []);
 
-  // Drag-and-drop edge creation state
-  const [edgeDragSource, setEdgeDragSource] = useState(null); // node id
-  const [edgeDragPos, setEdgeDragPos] = useState(null); // {x, y}
+  const [edgeDragSource, setEdgeDragSource] = useState(null);
+  const [edgeDragPos, setEdgeDragPos] = useState(null);
 
-  // Start edge drag from node
   const handleEdgeDragStart = (e, nodeId) => {
     if (e.button !== 0) return;
     const rect = svgRef.current.getBoundingClientRect();
@@ -469,7 +441,6 @@ export default function GraphDijkstra() {
     e.stopPropagation();
   };
 
-  // Move edge drag
   const handleSvgMouseMove = (e) => {
     if (!edgeDragSource) return;
     const rect = svgRef.current.getBoundingClientRect();
@@ -479,7 +450,6 @@ export default function GraphDijkstra() {
     });
   };
 
-  // Complete edge drag
   const handleEdgeDragEnd = (targetNodeId) => {
     if (edgeDragSource && targetNodeId && edgeDragSource !== targetNodeId) {
       const newId = `e${edgeDragSource}-${targetNodeId}`;
@@ -510,29 +480,23 @@ export default function GraphDijkstra() {
     setEdgeDragPos(null);
   };
 
-  // Cancel edge drag
   const handleSvgMouseUp = () => {
     setEdgeDragSource(null);
     setEdgeDragPos(null);
   };
 
-  // Color palette base for edges
   const edgeColorBase = isDark ? "#6b7280" : "#a3a3a3";
-  // Color palette base for nodes
   const nodeFill = isDark ? "#1e293b" : "#f3f4f6";
   const nodeStroke = isDark ? "#64748b" : "#64748b";
   const nodeText = isDark ? "#f3f4f6" : "#334155";
 
-  // Add state for editing edge weight inline
   const [inlineEditEdgeId, setInlineEditEdgeId] = useState("");
   const [inlineEditValue, setInlineEditValue] = useState("");
   const [edgeToDelete, setEdgeToDelete] = useState("");
   const [deleteMenuPos, setDeleteMenuPos] = useState(null);
 
-  // Bend drag state
   const [bendDrag, setBendDrag] = useState({ edgeId: null, offset: null });
 
-  // Helper to get control point for an edge
   const getEdgeControl = (edge, sourceNode, targetNode) => {
     if (edge.control) return edge.control;
     const dx = targetNode.x - sourceNode.x;
@@ -546,7 +510,6 @@ export default function GraphDijkstra() {
     return { x: mx + perpX, y: my + perpY };
   };
 
-  // Handle bend drag start
   const handleBendDragStart = (e, edge, sourceNode, targetNode) => {
     e.stopPropagation();
     e.preventDefault();
@@ -561,7 +524,6 @@ export default function GraphDijkstra() {
     });
   };
 
-  // Handle bend drag move
   const handleBendDragMove = useCallback(
     (e) => {
       if (!bendDrag.edgeId) return;
@@ -580,12 +542,10 @@ export default function GraphDijkstra() {
     [bendDrag, edges, nodes]
   );
 
-  // Handle bend drag end
   const handleBendDragEnd = useCallback(() => {
     setBendDrag({ edgeId: null, offset: null });
   }, []);
 
-  // Attach bend drag listeners
   useEffect(() => {
     if (bendDrag.edgeId) {
       window.addEventListener("mousemove", handleBendDragMove);
@@ -597,7 +557,6 @@ export default function GraphDijkstra() {
     }
   }, [bendDrag, handleBendDragMove, handleBendDragEnd]);
 
-  // Remove custom control if nodes move
   useEffect(() => {
     setEdges((eds) =>
       eds.map((ed) => {
@@ -605,7 +564,6 @@ export default function GraphDijkstra() {
         const sourceNode = nodes.find((n) => n.id === ed.source);
         const targetNode = nodes.find((n) => n.id === ed.target);
         if (!sourceNode || !targetNode) return ed;
-        // If control is too close to default, remove it
         const dx = targetNode.x - sourceNode.x;
         const dy = targetNode.y - sourceNode.y;
         const mx = (sourceNode.x + targetNode.x) / 2;
@@ -625,12 +583,9 @@ export default function GraphDijkstra() {
 
   return (
     <div className="w-full h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
-      {/* Enhanced Controls Panel */}
       <div className="flex-shrink-0 bg-gradient-to-r from-slate-50 to-blue-100 dark:from-slate-900 dark:to-blue-950 border-b border-slate-200 dark:border-slate-800 shadow-md rounded-b-2xl">
         <div className="px-6 py-4 flex flex-col gap-3">
-          {/* Controls Group 1: Start/End/Run Dijkstra/Node/Add/Remove/Directed */}
           <div className="flex flex-wrap items-center justify-center gap-4 mb-2 p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl shadow border border-slate-200 dark:border-slate-700">
-            {/* Start Selector */}
             <div className="flex items-center gap-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Start:
@@ -647,7 +602,6 @@ export default function GraphDijkstra() {
                 ))}
               </select>
             </div>
-            {/* End Selector */}
             <div className="flex items-center gap-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                 End:
@@ -664,14 +618,12 @@ export default function GraphDijkstra() {
                 ))}
               </select>
             </div>
-            {/* Run Dijkstra Button */}
             <button
               onClick={runDijkstra}
               className="px-7 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:from-green-600 hover:to-green-800 transition-all duration-200 transform hover:scale-105 border-2 border-green-700/30 min-w-[120px] cursor-pointer"
             >
               🚀 Run Dijkstra
             </button>
-            {/* Node Label Input & Add/Remove */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -695,7 +647,6 @@ export default function GraphDijkstra() {
                 ➖ Remove
               </button>
             </div>
-            {/* Directed/Undirected Toggle */}
             <button
               onClick={() => {
                 if (edgeType === "directed") {
@@ -740,9 +691,7 @@ export default function GraphDijkstra() {
             </button>
           </div>
 
-          {/* Controls Group 2: Speed Slider & Step Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-4 p-3 bg-blue-50/80 dark:bg-blue-900/60 rounded-xl shadow border border-blue-200 dark:border-blue-700">
-            {/* Step Back Button */}
             <button
               onClick={handleStepBack}
               className={`px-5 py-1 text-sm rounded-lg font-medium transition-all duration-200 shadow-sm border-2 border-slate-200 dark:border-slate-700 min-w-[48px] cursor-pointer ${
@@ -755,7 +704,6 @@ export default function GraphDijkstra() {
             >
               ⏮️
             </button>
-            {/* Pause/Resume Button */}
             <button
               onClick={handlePausePlay}
               className={`px-5 py-1 text-sm rounded-lg font-medium transition-all duration-200 shadow-sm border-2 border-slate-200 dark:border-slate-700 min-w-[70px] cursor-pointer ${
@@ -767,7 +715,6 @@ export default function GraphDijkstra() {
             >
               {paused ? "▶️" : "⏸️"}
             </button>
-            {/* Step Forward Button */}
             <button
               onClick={handleStepForward}
               className={`px-5 py-1 text-sm rounded-lg font-medium transition-all duration-200 shadow-sm border-2 border-slate-200 dark:border-slate-700 min-w-[48px] cursor-pointer ${
@@ -782,7 +729,6 @@ export default function GraphDijkstra() {
             >
               ⏭️
             </button>
-            {/* Speed Slider */}
             <div className="flex items-center gap-2 ml-3 pl-3 border-l border-slate-300 dark:border-slate-600">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Speed:
@@ -802,7 +748,6 @@ export default function GraphDijkstra() {
             </div>
           </div>
 
-          {/* Path Result Display (unchanged) */}
           {path.length > 0 && (
             <div className="flex items-center gap-3 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-xl px-5 py-2 border border-blue-200 dark:border-blue-700 shadow justify-center">
               <div className="flex items-center gap-2">
@@ -839,7 +784,6 @@ export default function GraphDijkstra() {
         </div>
       </div>
 
-      {/* Graph Canvas */}
       <div className="flex-1 min-h-0 relative bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-950">
         <svg
           ref={svgRef}
@@ -907,13 +851,11 @@ export default function GraphDijkstra() {
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
 
-          {/* Render edges */}
           {edges.map((edge) => {
             const sourceNode = nodes.find((n) => n.id === edge.source);
             const targetNode = nodes.find((n) => n.id === edge.target);
             if (!sourceNode || !targetNode) return null;
 
-            // Highlight logic for simulation steps and final path
             let isFinalPath = false;
             let edgeColor = edgeColorBase;
             let edgeClass = "";
@@ -921,7 +863,7 @@ export default function GraphDijkstra() {
               for (let i = 0; i < pathStep + 1; i++) {
                 if (path[i] === edge.source && path[i + 1] === edge.target) {
                   isFinalPath = true;
-                  edgeColor = "#2563eb"; // blue for final path
+                  edgeColor = "#2563eb";
                   edgeClass = "animate-path-pulse";
                   break;
                 }
@@ -929,10 +871,10 @@ export default function GraphDijkstra() {
             }
             if (!isFinalPath) {
               if (highlight.updateEdge === edge.id) {
-                edgeColor = "#22c55e"; // green for update
+                edgeColor = "#22c55e";
                 edgeClass = "animate-path-pulse";
               } else if (highlight.relaxEdge === edge.id) {
-                edgeColor = "#06b6d4"; // teal for relax
+                edgeColor = "#06b6d4";
                 edgeClass = "animate-path-pulse";
               }
             }
@@ -953,7 +895,6 @@ export default function GraphDijkstra() {
               edge.control
             );
 
-            // Arrowhead tangent at end
             const arrowAngle = Math.atan2(ey - cy, ex - cx);
             const arrowLength = 20;
             const arrowSpread = Math.PI / 4;
@@ -969,7 +910,6 @@ export default function GraphDijkstra() {
               ay - Math.sin(arrowAngle + arrowSpread) * arrowLength * 0.5;
             const arrow = `M${ex},${ey} L${ax1},${ay1} L${ax2},${ay2} Z`;
 
-            // Compute label position on the curve at t=0.5
             const t = 0.5;
             const x0 = sourceNode.x;
             const y0 = sourceNode.y;
@@ -982,7 +922,6 @@ export default function GraphDijkstra() {
             const labelY =
               (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1b + t * t * y2;
 
-            // Label color for final path and others
             const labelBg = isFinalPath
               ? "#2563eb"
               : isDark
@@ -1125,7 +1064,6 @@ export default function GraphDijkstra() {
             );
           })}
 
-          {/* Render temporary edge during drag */}
           {edgeDragSource &&
             edgeDragPos &&
             (() => {
@@ -1152,7 +1090,6 @@ export default function GraphDijkstra() {
               );
             })()}
 
-          {/* Render nodes */}
           {nodes.map((node) => {
             let isFinalPath = false;
             let nodeColor = nodeFill;
@@ -1169,7 +1106,7 @@ export default function GraphDijkstra() {
               }
             }
             if (!isFinalPath && highlight.node === node.id) {
-              nodeColor = "#f59e0b"; // amber for visit
+              nodeColor = "#f59e0b";
               nodeStrokeColor = "#d97706";
               nodeTextColor = "#fff";
               nodeClass = "animate-path-pulse";
@@ -1190,14 +1127,13 @@ export default function GraphDijkstra() {
                   }
                   onMouseDown={(e) => {
                     if (e.button === 2) {
-                      handleMouseDown(e, node.id); // Right click: move node
+                      handleMouseDown(e, node.id);
                     } else if (e.button === 0) {
-                      handleEdgeDragStart(e, node.id); // Left click: start edge drag
+                      handleEdgeDragStart(e, node.id);
                     }
                   }}
                   onContextMenu={(e) => e.preventDefault()}
                   onMouseUpCapture={(e) => {
-                    // Only handle edge drop if an edge drag is in progress and left click
                     if (
                       e.button === 0 &&
                       edgeDragSource &&
@@ -1227,7 +1163,6 @@ export default function GraphDijkstra() {
             );
           })}
         </svg>
-        {/* Helper Button (bottom right) */}
         <HelperButton />
       </div>
 
@@ -1268,7 +1203,6 @@ export default function GraphDijkstra() {
   );
 }
 
-// HelperButton component for instructions/features
 function HelperButton() {
   const [open, setOpen] = React.useState(false);
   return (
