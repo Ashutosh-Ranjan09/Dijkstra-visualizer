@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🗺️ Dijkstra's Algorithm Visualizer
 
-## Getting Started
+Ever wondered how GPS navigation finds the shortest route to your destination? This interactive visualizer brings Dijkstra's shortest path algorithm to life! Watch as the algorithm explores a graph step-by-step, finding the optimal path between any two points.
 
-First, run the development server:
+## ✨ What makes this special?
+
+This isn't just another algorithm demo - it's an **interactive learning experience** that helps you understand one of computer science's most fundamental algorithms through visual storytelling.
+
+### 🎯 Perfect for
+
+- **Students** learning graph algorithms and data structures
+- **Educators** teaching shortest path algorithms
+- **Developers** who want to see Dijkstra's algorithm in action
+- **Anyone curious** about how pathfinding works behind the scenes
+
+### 🚀 Features
+
+- **Interactive graph building** - Click to create nodes and edges
+- **Real-time visualization** - Watch the algorithm work step by step
+- **Customizable weights** - Set different costs for each path
+- **Responsive design** - Works beautifully on desktop and mobile
+- **Dark mode support** - Easy on the eyes during those late study sessions
+
+## 🏃‍♂️ Quick Start
+
+Ready to explore? Getting started is super simple:
 
 ```bash
+# Clone the project
+git clone https://github.com/Ashutosh-Ranjan09/Dijkstra-visualizer.git
+cd Dijkstra-visualizer
+
+# Install dependencies
+npm install
+
+# Launch the visualizer
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and start building your first graph! 🎉
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🎮 How to Use
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Create nodes** by clicking anywhere on the canvas
+2. **Connect nodes** by dragging from one node to another
+3. **Set edge weights** by clicking on the connection lines
+4. **Choose start and end points** by selecting nodes
+5. **Run the algorithm** and watch the magic happen!
 
-## Learn More
+The visualizer will show you exactly how Dijkstra's algorithm explores the graph, updates distances, and eventually finds the shortest path.
 
-To learn more about Next.js, take a look at the following resources:
+## 🤝 Contributing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Found a bug? Have a cool feature idea? I'd love your help making this visualizer even better!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Deploy on Vercel
+## 📜 License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This project is open source and available under the [MIT License](LICENSE).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+**Happy visualizing!** 🎨 If this project helped you understand Dijkstra's algorithm better, consider giving it a ⭐ - it really helps!
